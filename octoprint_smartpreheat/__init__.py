@@ -92,6 +92,8 @@ class SmartPreheat(octoprint.plugin.TemplatePlugin,
                 if gcode in ('M104', 'M109', 'M140', 'M190'):
                     self._logger.debug("Line %d: Detected SetTemp. Line=%s", lineNum, line)
 
+                    offsets = self._printer._comm.getOffsets()
+
                     toolMatch = octoprint.util.comm.regexes_parameters["intT"].search(line)
                     if toolMatch:
                         toolNum = int(toolMatch.group("value"))
@@ -104,10 +106,10 @@ class SmartPreheat(octoprint.plugin.TemplatePlugin,
 
                         if gcode in ("M104", "M109"):
                             self._logger.debug("Line %d: Tool %s = %s", lineNum, toolNum, temp)
-                            temps["tools"][toolNum] = temp
+                            temps["tools"][toolNum] = temp + offsets.get("tool%d" % toolNum, 0)
                         elif gcode in ("M140", "M190"):
                             self._logger.debug("Line %d: Bed = %s", lineNum, temp)
-                            temps["bed"] = temp
+                            temps["bed"] = temp + offsets.get("bed", 0)
 
         self._logger.debug("Temperatures: %r", temps)
         return temps
